@@ -20,11 +20,13 @@ from transformers import (
     HfArgumentParser,
     TrainingArguments,
 )
+
 from hf_args import DataTrainingArguments, ModelArguments, parse_model_name
 from data_wrapper import Glue, IMDB, SWAG
-from benchmarks.plm_pruning.data_wrapper.task_data import GLUE_TASK_INFO
+from data_wrapper.task_data import GLUE_TASK_INFO
 from estimate_efficency import compute_parameters
 from model_data import get_model_data
+from train_supernet import model_types
 
 
 logger = logging.getLogger(__name__)
@@ -100,13 +102,11 @@ def main():
         )
         metric = evaluate.load("accuracy")
         metric_name = "accuracy"
-    # elif data_args.task_name == "imdb":
-    #     data = Imdb(training_args=training_args, model_args=model_args, data_args=data_args)
-    # elif data_args.task_name == "custom":
-    #     data = Custom(training_args=training_args, model_args=model_args, data_args=data_args)
+
     train_dataloader, eval_dataloader, test_dataloader = data.get_data_loaders()
     num_labels = data.num_labels
 
+    # Define model
     model_type = parse_model_name(model_args)
 
     config = AutoConfig.from_pretrained(
@@ -117,10 +117,12 @@ def main():
         revision=model_args.model_revision,
         use_auth_token=True if model_args.use_auth_token else None,
     )
+
     if data_args.task_name in ["swag"]:
-        model_cls = AutoModelForMultipleChoice
+        model_cls = model_types["multiple_choice"]['small']
     else:
-        model_cls = AutoModelForSequenceClassification
+        model_cls = model_types["seq_classification"]['small']
+
     model = model_cls.from_pretrained(
         model_type,
         from_tf=bool(".ckpt" in model_type),
@@ -130,19 +132,9 @@ def main():
         use_auth_token=True if model_args.use_auth_token else None,
     )
 
-    if model_type in ["gpt2", "gpt2-medium", "distilgpt2"]:
-        model.config.pad_token_id = model.config.eos_token_id
-        # if tokenizer.pad_token is None:
-        #     tokenizer.add_special_tokens({'pad_token': '[PAD]'})
-        # model.resize_token_embeddings(len(tokenizer))
-
     model_data = get_model_data(model)
 
-    mask = model_data["mask"]
-    num_attention_heads = model_data["num_attention_heads"]
     attention_head_size = model_data["attention_head_size"]
-    num_layers = model_data["num_layers"]
-    intermediate_size = model_data["intermediate_size"]
     n_params_emb = model_data["n_params_emb"]
     n_params_classifier = model_data["n_params_classifier"]
     attention_size = model_data["attention_size"]
@@ -150,19 +142,10 @@ def main():
     total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-    head_mask = torch.ones((num_layers, num_attention_heads))
-    neuron_mask = torch.ones((num_layers, intermediate_size))
-
-    head_mask[nas_args.num_layers :] = 0
-    head_mask[: nas_args.num_layers, nas_args.num_heads :] = 0
-    neuron_mask[nas_args.num_layers :] = 0
-    neuron_mask[: nas_args.num_layers, nas_args.num_units :] = 0
-
-    head_mask = head_mask.to(device=device)
-    neuron_mask = neuron_mask.to(device=device)
+    model.select_sub_network({'num_layers': nas_args.num_layers,
+                              'num_heads': nas_args.num_heads,
+                              'num_units': nas_args.num_units})
     model.to(device)
-
-    handles = mask(model, neuron_mask, head_mask)
 
     is_regression = True if data_args.task_name == "stsb" else False
 
@@ -170,8 +153,8 @@ def main():
     n_params_model = compute_parameters(
         dmodel=attention_size,
         dhead=attention_head_size,
-        num_heads_per_layer=head_mask.sum(dim=1),
-        num_neurons_per_layer=neuron_mask.sum(dim=1),
+        num_heads_per_layer=np.ones(nas_args.num_layers) * nas_args.num_heads,
+        num_neurons_per_layer=np.ones(nas_args.num_layers) * nas_args.num_units,
     )
     n_params = n_params_emb + n_params_model + n_params_classifier
 
@@ -194,7 +177,7 @@ def main():
         for batch in train_dataloader:
             batch = {k: v.to(device) for k, v in batch.items()}
 
-            outputs = model(**batch, head_mask=head_mask)
+            outputs = model(batch)
             loss = outputs.loss
             loss.backward()
             optimizer.step()
@@ -205,7 +188,6 @@ def main():
         runtime = time.time() - start_time
         print(
             f"epoch {epoch}: training loss = {train_loss / len(train_dataloader)}, "
-            # f"evaluation metrics = {eval_metric}, "
             f"runtime = {runtime}"
         )
 
@@ -218,10 +200,9 @@ def main():
             for batch in dataloader:
                 batch = {k: v.to(device) for k, v in batch.items()}
 
-                outputs = model(**batch, head_mask=head_mask)
+                outputs = model(batch)
 
                 logits = outputs.logits
-                # predictions = torch.argmax(logits, dim=-1)
                 predictions = (
                     torch.squeeze(logits)
                     if is_regression

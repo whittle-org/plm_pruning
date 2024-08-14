@@ -1,6 +1,6 @@
 import transformers
 
-from benchmarks.plm_pruning.model_wrapper.mask import (
+from model_wrapper.mask import (
     mask_bert,
     mask_gpt,
     mask_gpt_neox,

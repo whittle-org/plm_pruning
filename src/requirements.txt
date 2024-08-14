@@ -3,3 +3,4 @@ transformers[torch]
 datasets
 evaluate
 tqdm
+git+https://github.com/syne-tune/syne-tune.git

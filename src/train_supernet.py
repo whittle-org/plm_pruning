@@ -27,7 +27,13 @@ from transformers import (
 )
 
 from whittle.sampling import RandomSampler
-from whittle.training_strategies import SandwichStrategy
+from whittle.loss.kd_loss import DistillLoss
+from whittle.training_strategies import (
+    RandomLinearStrategy,
+    RandomStrategy,
+    SandwichStrategy,
+    StandardStrategy,
+)
 
 from search_spaces import (
     FullSearchSpace,
@@ -35,10 +41,10 @@ from search_spaces import (
     LayerSearchSpace,
     MediumSearchSpace,
 )
-from benchmarks.plm_pruning.data_wrapper.task_data import GLUE_TASK_INFO
+from data_wrapper.task_data import GLUE_TASK_INFO
 from hf_args import DataTrainingArguments, ModelArguments, parse_model_name
 from data_wrapper import Glue, IMDB, SWAG
-from benchmarks.plm_pruning.bert import (
+from bert import (
     SuperNetBertForMultipleChoiceSMALL,
     SuperNetBertForMultipleChoiceMEDIUM,
     SuperNetBertForMultipleChoiceLAYER,
@@ -49,9 +55,8 @@ from benchmarks.plm_pruning.bert import (
     SuperNetBertForSequenceClassificationLARGE,
 )
 
-
 def kd_loss(
-    student_logits, teacher_logits, targets, temperature=1, is_regression=False
+    student_logits, targets, teacher_logits, temperature=1, is_regression=False
 ):
     if is_regression:
         return F.mse_loss(student_logits, teacher_logits)
@@ -61,7 +66,7 @@ def kd_loss(
         )
         predictive_loss = F.cross_entropy(student_logits, targets)
         return temperature**2 * kd_loss + predictive_loss
-
+#
 
 search_spaces = {
     "small": SmallSearchSpace,
@@ -98,9 +103,6 @@ class NASArguments:
     temperature: float = field(metadata={"help": ""}, default=1)
     do_hpo: bool = field(metadata={"help": ""}, default=False)
     store_debug_info: bool = field(metadata={"help": ""}, default=False)
-
-    # TODO: not used
-    st_checkpoint_dir: str = field(metadata={"help": ""}, default=None)
 
 
 def main():
@@ -226,9 +228,9 @@ def main():
     logging.info(f"Use {nas_args.sampling_strategy} to update super-network training")
 
     is_regression = True if data_args.task_name == "stsb" else False
-    distillation_loss = partial(
-        kd_loss, is_regression=is_regression, temperature=nas_args.temperature
-    )
+    #distillation_loss = partial(
+    #    kd_loss, is_regression=is_regression, temperature=nas_args.temperature
+    #)
     # if is_regression:
     #     distillation_loss = nn.MSELoss()
     # else:
@@ -237,20 +239,33 @@ def main():
     #         F.log_softmax(x, dim=-1), F.log_softmax(y, dim=-1)
     #     )
 
-    def loss_function(labels, outputs):
-        return outputs.loss
+    def loss_function(predictions, labels):
+        return predictions.loss
 
     sampler = RandomSampler(search_space.config_space, seed=training_args.seed)
     training_strategies = {
-        # 'standard': train_epoch,
+        'standard': StandardStrategy(
+            sampler=sampler,
+            loss_function=loss_function,
+        ),
         "sandwich": SandwichStrategy(
             sampler=sampler,
             loss_function=loss_function,
         ),
-        # 'sandwich_kd': train_sandwich_kd,
-        # 'random': train_random,
-        # 'ats': train_ats,
-        # 'random_linear': partial(train_random_linear,  total_number_of_steps=args.epochs * 500 // args.batch_size),
+        'random': RandomStrategy(
+            sampler=sampler,
+            loss_function=loss_function,
+        ),
+        'random_linear': RandomLinearStrategy(
+            sampler=sampler,
+            loss_function=loss_function,
+            total_number_of_steps=num_training_steps,
+        ),
+        "full": SandwichStrategy(
+            sampler=sampler,
+            kd_loss=kd_loss,
+            loss_function=loss_function,
+        ),
     }
 
     update_op = training_strategies[nas_args.sampling_strategy]

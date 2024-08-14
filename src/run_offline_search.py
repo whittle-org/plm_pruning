@@ -23,9 +23,8 @@ from functools import partial
 
 from whittle.search import multi_objective_search
 
-from bert import SuperNetBertForSequenceClassification
 from estimate_efficency import compute_parameters
-from benchmarks.plm_pruning.data_wrapper.task_data import GLUE_TASK_INFO
+from data_wrapper.task_data import GLUE_TASK_INFO
 from search_spaces import (
     SmallSearchSpace,
     MediumSearchSpace,
@@ -35,6 +34,7 @@ from search_spaces import (
 from hf_args import DataTrainingArguments, ModelArguments, parse_model_name
 from data_wrapper import Glue, IMDB, SWAG
 from model_data import get_model_data
+from train_supernet import model_types
 
 
 SEARCHSPACES = {
@@ -139,10 +139,9 @@ def main():
     st = time.time()
 
     if data_args.task_name in ["swag"]:
-        pass
+        model_cls = model_types["multiple_choice"][search_args.search_space]
     else:
-        if model_type.startswith("bert"):
-            model_cls = SuperNetBertForSequenceClassification
+        model_cls = model_types["seq_classification"][search_args.search_space]
 
     model = model_cls.from_pretrained(search_args.checkpoint_dir_model)
     model_data = get_model_data(model)

@@ -1,9 +1,12 @@
-# Neural Architecture Search for Large Language Models
+# Structural Pruning of Pre-trained Language Models via Neural Architecture Search
 
-
-This example shows how to use Syne Tune for multi-objective Neural Architecture Search (NAS)
+This package provides code for multi-objective Neural Architecture Search (NAS)
 to prune pre-trained language models by searching for sub-networks that 
-minimize both validation error and parameter count. 
+minimize both validation error and parameter count. For more details see the following paper:
+
+Structural Pruning of Pre-trained Language Models via Neural Architecture Search Download 
+Aaron Klein, Jacek Golebiowski, Xingchen Ma, Valerio Perrone, Cedric Archambeau 
+https://openreview.net/forum?id=XiK8tHDQNX&referrer=%5BAuthor%20Console%5D(%2Fgroup%3Fid%3DTMLR%2FAuthors%23your-submissions)
 
 We distinguish between standard NAS, which fine-tunes each sub-network in isolation and weight-sharing 
 based NAS. Our weight-sharing based NAS approach consists of two stages:
@@ -12,22 +15,16 @@ based NAS. Our weight-sharing based NAS approach consists of two stages:
 2. In the second stage, we run multi-objective search to find the Pareto set of sub-networks 
    of the super-network. To evaluate each sub-network we use the shared weights of the super-networks, without
    any further training. This is relatively cheap compared to standard NAS, since we only do a single pass
-   over the validation data without computing gradients. To account for the overhead of loading the model and 
-   the dataset, we use an ask/tell interface of Syne Tune, such that the full optimization process run in a single
-   python process.
+   over the validation data without computing gradients. 
 
 ## Install
 
-To get started, first install SyneTune:
-
-```bash
-pip install -e .
-```
+To get started, first install [whittle](https://github.com/whittle-org/whittle) following 
+the installation instructions [here](https://github.com/whittle-org/whittle?tab=readme-ov-file#setup)
 
 Afterwards, we install the dependencies via:
 
 ```bash
-cd benchmarking/nursery/nas_plm
 pip install -r requirements.txt
 ```
 
@@ -37,14 +34,13 @@ At the moment we support models from the BERT and RoBERTa family and the followi
 ```[rte', 'mrpc', 'cola', 'stsb', 'sst2', 'qnli', 'imdb', 'swag', 'mnli', 'qqp']```
 
 Also you can use the following multi-objective methods from Syne Tune both for standard NAS and weight-sharing based NAS: 
-```['random_search', 'morea', 'local_search', 'nsga2', 'lsbo', 'rsbo', 'moasha', 'ehvi']```
-To implement a new method, follow the Syne Tune interface and link your method in `baseline.py`.
+```['random_search', 'morea', 'local_search', 'nsga2', 'moasha', 'ehvi']```
 
 ## Standard NAS
 
 To run standard NAS, use the following script. This will run NAS using random search for 3600 seconds on the RTE dataset.
 
-```python run_nas.py --output_dir=./output_standard_nas --model_name bert-base-cased --dataset rte --runtime 3600 --method random_search --num_train_epochs 5 --seed 0 --dataset_seed 0```
+```python src/run_nas.py --output_dir=./output_standard_nas --model_name bert-base-cased --dataset rte --runtime 3600 --method random_search --num_train_epochs 5 --seed 0 --dataset_seed 0```
 
 ## Weight-sharing NAS
 

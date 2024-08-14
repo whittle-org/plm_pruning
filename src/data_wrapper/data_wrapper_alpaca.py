@@ -1,32 +1,18 @@
-import logging
-import torch
-import numpy as np
-
-from dataclasses import dataclass
-from typing import Optional, Union
-
-from datasets import load_dataset
-
-from torch.utils.data import Subset
-from transformers.tokenization_utils_base import (
-    PreTrainedTokenizerBase,
-    PaddingStrategy,
-)
-from data_wrapper import DataWrapper
-
-logger = logging.getLogger(__name__)
-
-
 import copy
 import json
-import pathlib
 import logging
+import numpy as np
+import torch
+import transformers
+
 from typing import Dict, Sequence
 from dataclasses import dataclass
 
-import torch
-import transformers
 from torch.utils.data import Dataset, Subset
+
+from data_wrapper import DataWrapper
+
+logger = logging.getLogger(__name__)
 
 
 IGNORE_INDEX = -100

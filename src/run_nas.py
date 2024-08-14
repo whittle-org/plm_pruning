@@ -4,6 +4,7 @@ import os
 
 logging.basicConfig(level=logging.INFO)
 
+from argparse import ArgumentParser
 from pathlib import Path
 from transformers import AutoModelForSequenceClassification
 
@@ -11,9 +12,9 @@ from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import LocalBackend
 from syne_tune.config_space import randint
 from syne_tune.experiments import load_experiment
+
 from baselines import MethodArguments, methods
 
-from argparse import ArgumentParser
 
 if __name__ == "__main__":
     parser = ArgumentParser()
