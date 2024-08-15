@@ -27,7 +27,6 @@ from transformers import (
 )
 
 from whittle.sampling import RandomSampler
-from whittle.loss.kd_loss import DistillLoss
 from whittle.training_strategies import (
     RandomLinearStrategy,
     RandomStrategy,
@@ -71,8 +70,6 @@ def kd_loss(
         return temperature ** 2 * kd_loss + predictive_loss
 
 
-#
-
 search_spaces = {
     "small": SmallSearchSpace,
     "medium": MediumSearchSpace,
@@ -106,8 +103,6 @@ class NASArguments:
     log_dir: str = field(metadata={"help": ""}, default="./tensorboard_log_dir")
     num_random_sub_nets: int = field(metadata={"help": ""}, default=1)
     temperature: float = field(metadata={"help": ""}, default=1)
-    do_hpo: bool = field(metadata={"help": ""}, default=False)
-    store_debug_info: bool = field(metadata={"help": ""}, default=False)
 
 
 def main():
@@ -123,10 +118,6 @@ def main():
         nas_args,
     ) = parser.parse_args_into_dataclasses()
 
-    if nas_args.do_hpo:
-        from syne_tune.report import Reporter
-
-        report = Reporter()
     # Setup logging
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
@@ -170,15 +161,10 @@ def main():
         metric = evaluate.load("accuracy")
         metric_name = "accuracy"
 
-    # elif data_args.task_name == "custom":
-    #     data = Custom(training_args=training_args, model_args=model_args, data_args=data_args)
     train_dataloader, eval_dataloader, test_dataloader = data.get_data_loaders()
     num_labels = data.num_labels
 
     # Load pretrained model and tokenizer
-    #
-    # In distributed training, the .from_pretrained methods guarantee that only one local process can concurrently
-    # download model & vocab.
     config = AutoConfig.from_pretrained(
         model_type,
         num_labels=num_labels,
@@ -233,16 +219,6 @@ def main():
     logging.info(f"Use {nas_args.sampling_strategy} to update super-network training")
 
     is_regression = True if data_args.task_name == "stsb" else False
-    # distillation_loss = partial(
-    #    kd_loss, is_regression=is_regression, temperature=nas_args.temperature
-    # )
-    # if is_regression:
-    #     distillation_loss = nn.MSELoss()
-    # else:
-    #     kl_loss = nn.KLDivLoss(reduction="batchmean", log_target=True)
-    #     distillation_loss = lambda x, y: kl_loss(
-    #         F.log_softmax(x, dim=-1), F.log_softmax(y, dim=-1)
-    #     )
 
     def loss_function(predictions, labels):
         return predictions.loss
@@ -275,11 +251,6 @@ def main():
 
     update_op = training_strategies[nas_args.sampling_strategy]
 
-    if nas_args.store_debug_info:
-        from collections import defaultdict
-
-        debug_info = defaultdict(list)
-
     for epoch in range(int(training_args.num_train_epochs)):
         model.train()
         train_loss = 0
@@ -287,66 +258,6 @@ def main():
             batch = {k: v.to(device) for k, v in batch.items()}
 
             loss = update_op(model, batch, batch["labels"])
-
-            #            if nas_args.sampling_strategy == "one_shot":
-            #                # update largest sub-network (i.e super-network)
-            #                outputs = model(**batch)
-            #                loss = outputs.loss
-            #                y_teacher = outputs.logits.detach()
-            #                accelerator.backward(
-            #                    loss
-            #                ) if nas_args.use_accelerate else loss.backward()
-            #
-            #                # update smallest sub-network
-            #                head_mask, ffn_mask = sampler.get_smallest_sub_network()
-            #                if nas_args.use_accelerate:
-            #                    head_mask = head_mask.to(device=accelerator.device)
-            #                    ffn_mask = ffn_mask.to(device=accelerator.device)
-            #                else:
-            #                    head_mask = head_mask.to(device="cuda", dtype=model.dtype)
-            #                    ffn_mask = ffn_mask.to(device="cuda", dtype=model.dtype)
-            #
-            #                handles = mask(model, ffn_mask, head_mask)
-            #                outputs = model(head_mask=head_mask, **batch)
-            #
-            ##                for handle in handles:
-            #                    handle.remove()
-            #                # loss = loss_KD_fn(outputs.logits, y_teacher, batch['labels'], is_regression=is_regression)
-            #                # loss = distillation_loss(
-            #                #     F.log_softmax(outputs.logits, dim=-1),
-            #                #     F.log_softmax(y_teacher, dim=-1),
-            #                # )
-            #                loss = distillation_loss(outputs.logits, y_teacher, batch["labels"])
-            #                accelerator.backward(
-            #                    loss
-            #                ) if nas_args.use_accelerate else loss.backward()
-            #
-            #                # update random sub-network
-            #                for k in range(nas_args.num_random_sub_nets):
-            #                    head_mask, ffn_mask = sampler()
-            #                    if nas_args.use_accelerate:
-            #                        head_mask = head_mask.to(device=accelerator.device)
-            #                        ffn_mask = ffn_mask.to(device=accelerator.device)
-            #                    else:
-            #                        head_mask = head_mask.to(device="cuda", dtype=model.dtype)
-            #                        ffn_mask = ffn_mask.to(device="cuda", dtype=model.dtype)
-            #
-            #                    handles = mask(model, ffn_mask, head_mask)
-            #
-            #                    outputs = model(head_mask=head_mask, **batch)
-            #                    for handle in handles:
-            #                        handle.remove()
-            #
-            #                    loss = distillation_loss(outputs.logits, y_teacher, batch["labels"])
-            #                    accelerator.backward(
-            #                        loss
-            #                    ) if nas_args.use_accelerate else loss.backward()
-
-            if nas_args.store_debug_info:
-                # debug_info[f'index'].append(idx)
-                debug_info[f"loss"].append(loss.item())
-                debug_info[f"step"].append(step)
-                debug_info["lr"].append(lr_scheduler.get_lr())
 
             step += 1
 
@@ -364,7 +275,6 @@ def main():
             outputs = model(batch)
 
             logits = outputs.logits
-            # predictions = torch.argmax(logits, dim=-1)
             predictions = (
                 torch.squeeze(logits) if is_regression else torch.argmax(logits, dim=-1)
             )
@@ -372,8 +282,7 @@ def main():
             metric.add_batch(predictions=predictions, references=batch["labels"])
 
         eval_metric = metric.compute()
-        if nas_args.do_hpo:
-            report(epoch=epoch, metric=eval_metric[metric_name])
+
         runtime = time.time() - start_time
         logging.info(
             f"epoch {epoch}: training loss = {train_loss / len(train_dataloader)}, "
@@ -397,7 +306,6 @@ def main():
         outputs = model(batch)
 
         logits = outputs.logits
-        # predictions = torch.argmax(logits, dim=-1)
         predictions = (
             torch.squeeze(logits) if is_regression else torch.argmax(logits, dim=-1)
         )
@@ -412,19 +320,12 @@ def main():
     results["params"] = n_params
     results["search_space"] = nas_args.search_space
     results["runtime"] = time.time() - start_time
-
     results[metric_name] = float(eval_metric[metric_name])
     results["test_" + metric_name] = float(test_metric[metric_name])
     fname = os.path.join(
         training_args.output_dir, f"results_{data_args.task_name}.json"
     )
     json.dump(results, open(fname, "w"))
-
-    if nas_args.store_debug_info:
-        fname = os.path.join(
-            training_args.output_dir, f"debug_info_{data_args.task_name}.json"
-        )
-        json.dump(debug_info, open(fname, "w"))
 
 
 if __name__ == "__main__":
