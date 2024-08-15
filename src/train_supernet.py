@@ -55,9 +55,12 @@ from bert import (
     SuperNetBertForSequenceClassificationLARGE,
 )
 
+
 def kd_loss(
-    student_logits, targets, teacher_logits, temperature=1, is_regression=False
+    student_output, targets, teacher_output, temperature=1, is_regression=False
 ):
+    teacher_logits = teacher_output.logits.detach()
+    student_logits = student_output.logits
     if is_regression:
         return F.mse_loss(student_logits, teacher_logits)
     else:
@@ -281,7 +284,7 @@ def main():
         for batch in train_dataloader:
             batch = {k: v.to(device) for k, v in batch.items()}
 
-            loss = update_op(model, batch, None)
+            loss = update_op(model, batch, batch['labels'])
 
             #            if nas_args.sampling_strategy == "one_shot":
             #                # update largest sub-network (i.e super-network)
