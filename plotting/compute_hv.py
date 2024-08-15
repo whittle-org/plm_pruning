@@ -11,12 +11,6 @@ from tqdm import tqdm
 from sklearn.preprocessing import QuantileTransformer
 from pygmo import hypervolume
 
-from syne_tune.experiments import load_experiment
-from syne_tune.constants import ST_TUNER_TIME
-
-# from syne_tune.blackbox_repository.repository import load
-from nas_fine_tuning.task_data import GLUE_TASK_INFO
-
 
 class HyperVolume:
     def __init__(self, ref_point):
