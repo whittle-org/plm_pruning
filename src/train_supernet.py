@@ -68,7 +68,9 @@ def kd_loss(
             student_logits / temperature, F.softmax(teacher_logits / temperature, dim=1)
         )
         predictive_loss = F.cross_entropy(student_logits, targets)
-        return temperature**2 * kd_loss + predictive_loss
+        return temperature ** 2 * kd_loss + predictive_loss
+
+
 #
 
 search_spaces = {
@@ -140,7 +142,7 @@ def main():
 
     # Set seed before initializing model.
     if int(training_args.seed) == -1:
-        training_args.seed = np.random.randint(2**32 - 1)
+        training_args.seed = np.random.randint(2 ** 32 - 1)
     print(training_args.seed)
     set_seed(training_args.seed)
     torch.manual_seed(training_args.seed)
@@ -231,9 +233,9 @@ def main():
     logging.info(f"Use {nas_args.sampling_strategy} to update super-network training")
 
     is_regression = True if data_args.task_name == "stsb" else False
-    #distillation_loss = partial(
+    # distillation_loss = partial(
     #    kd_loss, is_regression=is_regression, temperature=nas_args.temperature
-    #)
+    # )
     # if is_regression:
     #     distillation_loss = nn.MSELoss()
     # else:
@@ -247,7 +249,7 @@ def main():
 
     sampler = RandomSampler(search_space.config_space, seed=training_args.seed)
     training_strategies = {
-        'standard': StandardStrategy(
+        "standard": StandardStrategy(
             sampler=sampler,
             loss_function=loss_function,
         ),
@@ -255,11 +257,11 @@ def main():
             sampler=sampler,
             loss_function=loss_function,
         ),
-        'random': RandomStrategy(
+        "random": RandomStrategy(
             sampler=sampler,
             loss_function=loss_function,
         ),
-        'random_linear': RandomLinearStrategy(
+        "random_linear": RandomLinearStrategy(
             sampler=sampler,
             loss_function=loss_function,
             total_number_of_steps=num_training_steps,
@@ -284,7 +286,7 @@ def main():
         for batch in train_dataloader:
             batch = {k: v.to(device) for k, v in batch.items()}
 
-            loss = update_op(model, batch, batch['labels'])
+            loss = update_op(model, batch, batch["labels"])
 
             #            if nas_args.sampling_strategy == "one_shot":
             #                # update largest sub-network (i.e super-network)

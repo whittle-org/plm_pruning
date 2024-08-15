@@ -8,7 +8,7 @@ from syne_tune.optimizer.baselines import (
     NSGA2,
     MORandomScalarizationBayesOpt,
     MOASHA,
-    EHVI
+    EHVI,
 )
 
 from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import (
@@ -152,7 +152,6 @@ methods = {
         # random_seed=method_arguments.random_seed,
         points_to_evaluate=initial_design(method_arguments.config_space),
     ),
-
     Methods.EHVI: lambda method_arguments: EHVI(
         config_space=method_arguments.config_space,
         metric=method_arguments.metrics,

@@ -119,9 +119,9 @@ def main():
     )
 
     if data_args.task_name in ["swag"]:
-        model_cls = model_types["multiple_choice"]['small']
+        model_cls = model_types["multiple_choice"]["small"]
     else:
-        model_cls = model_types["seq_classification"]['small']
+        model_cls = model_types["seq_classification"]["small"]
 
     model = model_cls.from_pretrained(
         model_type,
@@ -142,9 +142,13 @@ def main():
     total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-    model.select_sub_network({'num_layers': nas_args.num_layers,
-                              'num_heads': nas_args.num_heads,
-                              'num_units': nas_args.num_units})
+    model.select_sub_network(
+        {
+            "num_layers": nas_args.num_layers,
+            "num_heads": nas_args.num_heads,
+            "num_units": nas_args.num_units,
+        }
+    )
     model.to(device)
 
     is_regression = True if data_args.task_name == "stsb" else False
