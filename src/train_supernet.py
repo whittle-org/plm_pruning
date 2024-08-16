@@ -53,6 +53,16 @@ from bert import (
     SuperNetBertForSequenceClassificationLAYER,
     SuperNetBertForSequenceClassificationLARGE,
 )
+from roberta import (
+    SuperNetRobertaForMultipleChoiceSMALL,
+    SuperNetRobertaForMultipleChoiceMEDIUM,
+    SuperNetRobertaForMultipleChoiceLAYER,
+    SuperNetRobertaForMultipleChoiceLARGE,
+    SuperNetRobertaForSequenceClassificationSMALL,
+    SuperNetRobertaForSequenceClassificationMEDIUM,
+    SuperNetRobertaForSequenceClassificationLAYER,
+    SuperNetRobertaForSequenceClassificationLARGE,
+)
 
 
 def kd_loss(
@@ -78,7 +88,8 @@ search_spaces = {
     "smallpower2": partial(SmallSearchSpace, power_of_2_encoding=True),
 }
 
-model_types = {
+model_types = dict()
+model_types["bert"] = {
     "seq_classification": {
         "small": SuperNetBertForSequenceClassificationSMALL,
         "medium": SuperNetBertForSequenceClassificationMEDIUM,
@@ -90,6 +101,20 @@ model_types = {
         "medium": SuperNetBertForMultipleChoiceMEDIUM,
         "layer": SuperNetBertForMultipleChoiceLAYER,
         "uniform": SuperNetBertForMultipleChoiceLARGE,
+    },
+}
+model_types["roberta"] = {
+    "seq_classification": {
+        "small": SuperNetRobertaForSequenceClassificationSMALL,
+        "medium": SuperNetRobertaForSequenceClassificationMEDIUM,
+        "layer": SuperNetRobertaForSequenceClassificationLAYER,
+        "uniform": SuperNetRobertaForSequenceClassificationLARGE,
+    },
+    "multiple_choice": {
+        "small": SuperNetRobertaForMultipleChoiceSMALL,
+        "medium": SuperNetRobertaForMultipleChoiceMEDIUM,
+        "layer": SuperNetRobertaForMultipleChoiceLAYER,
+        "uniform": SuperNetRobertaForMultipleChoiceLARGE,
     },
 }
 
@@ -174,10 +199,19 @@ def main():
         use_auth_token=True if model_args.use_auth_token else None,
     )
 
-    if data_args.task_name in ["swag"]:
-        model_cls = model_types["multiple_choice"][nas_args.search_space]
+    if model_type.startswith("bert"):
+        model_family = 'bert'
+    elif model_type.startswith("roberta"):
+        model_family = 'roberta'
     else:
-        model_cls = model_types["seq_classification"][nas_args.search_space]
+        logging.error(f'Model type {model_type} are not supported. '
+                      f'We only support models of the BERT or RoBERTa family.')
+        raise NotImplementedError
+
+    if data_args.task_name in ["swag"]:
+        model_cls = model_types[model_family]["multiple_choice"][nas_args.search_space]
+    else:
+        model_cls = model_types[model_family]["seq_classification"][nas_args.search_space]
 
     search_space = search_spaces[nas_args.search_space](config, seed=training_args.seed)
 

@@ -126,10 +126,7 @@ def main():
         )
         metric = load("accuracy")
         metric_name = "accuracy"
-    # elif data_args.task_name == "imdb":
-    #     data = Imdb(training_args=training_args, model_args=model_args, data_args=data_args)
-    # elif data_args.task_name == "custom":
-    #     data = Custom(training_args=training_args, model_args=model_args, data_args=data_args)
+
     _, eval_dataloader, test_dataloader = data.get_data_loaders()
 
     is_regression = data_args.task_name == "stsb"
@@ -138,10 +135,19 @@ def main():
 
     st = time.time()
 
-    if data_args.task_name in ["swag"]:
-        model_cls = model_types["multiple_choice"][search_args.search_space]
+    if model_type.startswith("bert"):
+        model_family = 'bert'
+    elif model_type.startswith("roberta"):
+        model_family = 'roberta'
     else:
-        model_cls = model_types["seq_classification"][search_args.search_space]
+        logging.error(f'Model type {model_type} are not supported. '
+                      f'We only support models of the BERT or RoBERTa family.')
+        raise NotImplementedError
+
+    if data_args.task_name in ["swag"]:
+        model_cls = model_types[model_family]["multiple_choice"][search_args.search_space]
+    else:
+        model_cls = model_types[model_family]["seq_classification"][search_args.search_space]
 
     model = model_cls.from_pretrained(search_args.checkpoint_dir_model)
     model_data = get_model_data(model)

@@ -14,8 +14,6 @@ from torch.optim import AdamW
 import transformers
 from transformers import (
     AutoConfig,
-    AutoModelForSequenceClassification,
-    AutoModelForMultipleChoice,
     get_scheduler,
     HfArgumentParser,
     TrainingArguments,
@@ -118,10 +116,19 @@ def main():
         use_auth_token=True if model_args.use_auth_token else None,
     )
 
-    if data_args.task_name in ["swag"]:
-        model_cls = model_types["multiple_choice"]["small"]
+    if model_type.startswith("bert"):
+        model_family = 'bert'
+    elif model_type.startswith("roberta"):
+        model_family = 'roberta'
     else:
-        model_cls = model_types["seq_classification"]["small"]
+        logging.error(f'Model type {model_type} are not supported. '
+                      f'We only support models of the BERT or RoBERTa family.')
+        raise NotImplementedError
+
+    if data_args.task_name in ["swag"]:
+        model_cls = model_types[model_family]["multiple_choice"]["small"]
+    else:
+        model_cls = model_types[model_family]["seq_classification"]["small"]
 
     model = model_cls.from_pretrained(
         model_type,
