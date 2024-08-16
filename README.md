@@ -51,7 +51,7 @@ Afterwards, we can run our multi-objective search via Syne-Tune.
 
 To run the training of the super-network, execute the following script:
 
-```python train_supernet.py --learning_rate 2e-05 --model_name_or_path bert-base-cased --num_train_epochs 5 --output_dir ./supernet_model_checkpoint --save_strategy "epoch" --per_device_eval_batch_size 8 --per_device_train_batch_size 4 --sampling_strategy one_shot --save_strategy epoch --search_space small --seed 0 --task_name rte --num_random_sub_nets 2 --temperature 10 ``` 
+```python src/train_supernet.py --learning_rate 2e-05 --model_name_or_path bert-base-cased --num_train_epochs 5 --output_dir ./supernet_model_checkpoint --save_strategy "epoch" --per_device_eval_batch_size 8 --per_device_train_batch_size 4 --sampling_strategy one_shot --save_strategy epoch --search_space small --seed 0 --task_name rte --num_random_sub_nets 2 --temperature 10 ``` 
 
 This runs the super-network training ('one_shot') on the RTE dataset for 5 epochs. Checkpoints are saved in the
 `output_dir`, such that we can load it later for the multi-objective search. 
@@ -64,7 +64,7 @@ See the paper for a detailed description.
 
 Next, we use the model checkpoint from the previous step to perform the multi-objective search:
 
-```python run_offline_search.py --model_name_or_path bert-base-cased --num_samples 100 --output_dir ./results_nas  --checkpoint_dir_model ./supernet_model_checkpoint --search_space small --search_strategy random_search --seed 0 --task_name rte``` 
+```python src/run_offline_search.py --model_name_or_path bert-base-cased --num_samples 100 --output_dir ./results_nas  --checkpoint_dir_model ./supernet_model_checkpoint --search_space small --search_strategy random_search --seed 0 --task_name rte``` 
 
 Make sure that `checkpoint_dir_model` points to the directory with the model checkpoint from the previous step. 
 Results will be saved as a json file in `output_dir`.
