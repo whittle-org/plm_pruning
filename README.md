@@ -4,9 +4,19 @@ This package provides code for multi-objective Neural Architecture Search (NAS)
 to prune pre-trained language models by searching for sub-networks that 
 minimize both validation error and parameter count. For more details see the following paper:
 
-Structural Pruning of Pre-trained Language Models via Neural Architecture Search Download 
-Aaron Klein, Jacek Golebiowski, Xingchen Ma, Valerio Perrone, Cedric Archambeau 
-https://openreview.net/forum?id=XiK8tHDQNX&referrer=%5BAuthor%20Console%5D(%2Fgroup%3Fid%3DTMLR%2FAuthors%23your-submissions)
+```
+@article{klein-tmlr24,
+  title={Structural Pruning of Pre-trained Language Models via Neural Architecture Search},
+  author={Aaron Klein, Jacek Golebiowski, Xingchen Ma, Valerio Perrone, Cedric Archambeau},
+  journal={Submitted to Transactions on Machine Learning Research},
+  year={2024},
+  url={https://openreview.net/forum?id=XiK8tHDQNX},
+  note={Under review}
+}
+```
+   
+   
+   https://openreview.net/forum?id=XiK8tHDQNX&referrer=%5BAuthor%20Console%5D(%2Fgroup%3Fid%3DTMLR%2FAuthors%23your-submissions)
 
 We distinguish between standard NAS, which fine-tunes each sub-network in isolation and weight-sharing 
 based NAS. Our weight-sharing based NAS approach consists of two stages:
