@@ -1,8 +1,8 @@
 # Structural Pruning of Pre-trained Language Models via Neural Architecture Search
 
-This package provides code for multi-objective Neural Architecture Search (NAS)
+This package provides code to reproduce experiments from Klein et al. which proposes multi-objective Neural Architecture Search (NAS)
 to prune pre-trained language models by searching for sub-networks that 
-minimize both validation error and parameter count. For more details see the following paper:
+minimize both validation error and parameter count. If you use this code please cite the original paper:
 
 ```
 @article{klein-tmlr24,
@@ -15,12 +15,9 @@ minimize both validation error and parameter count. For more details see the fol
 }
 ```
    
-   
-   https://openreview.net/forum?id=XiK8tHDQNX&referrer=%5BAuthor%20Console%5D(%2Fgroup%3Fid%3DTMLR%2FAuthors%23your-submissions)
-
 We distinguish between standard NAS, which fine-tunes each sub-network in isolation and weight-sharing 
 based NAS. Our weight-sharing based NAS approach consists of two stages:
-1. We fine-tune the pre-trained network (dubbed super-network) via weight-sharing based NAS strategies. 
+1. We first fine-tune the pre-trained network (dubbed super-network) via weight-sharing based NAS strategies. 
    In a nutshell, in each update steps, we only update parts of the network to train different sub-networks.
 2. In the second stage, we run multi-objective search to find the Pareto set of sub-networks 
    of the super-network. To evaluate each sub-network we use the shared weights of the super-networks, without
@@ -35,6 +32,7 @@ the installation instructions [here](https://github.com/whittle-org/whittle?tab=
 Afterwards, we install the dependencies via:
 
 ```bash
+cd src
 pip install -r requirements.txt
 ```
 
@@ -48,14 +46,14 @@ Also you can use the following multi-objective methods from Syne Tune both for s
 
 ## Standard NAS
 
-To run standard NAS, use the following script. This will run NAS using random search for 3600 seconds on the RTE dataset.
+To run standard NAS, use the following script. This will run NAS using [Syne-Tune](https://github.com/syne-tune/syne-tune) to prune a BERT-base-cased model using random search for 3600 seconds on the RTE dataset.
 
 ```python src/run_nas.py --output_dir=./output_standard_nas --model_name bert-base-cased --dataset rte --runtime 3600 --method random_search --num_train_epochs 5 --seed 0 --dataset_seed 0```
 
 ## Weight-sharing NAS
 
 As described above, weight-sharing NAS runs in two phases. We first fine-tune the super-network and store the checkpoint on disk.
-Afterwards, we can run our multi-objective search via Syne-Tune. 
+Afterward, we can run our multi-objective search using the same algorithms as for standard NAS, except for MO-ASHA which only works in a multi-fidelity setting. 
 
 ### Super-Network Training
 
