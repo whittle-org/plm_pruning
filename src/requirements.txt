@@ -1,6 +1,8 @@
 scikit-learn
+numpy
 transformers[torch]
 datasets
 evaluate
 tqdm
 git+https://github.com/syne-tune/syne-tune.git
+git+https://github.com/whittle-org/whittle.git
