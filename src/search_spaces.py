@@ -65,9 +65,6 @@ class SmallSearchSpace(SearchSpace):
         return config_space
 
     def __call__(self, *args, **kwargs):
-        # num_layers = self.rng.randint(self.num_layers)
-        # num_heads = self.rng.randint(1, self.num_heads)
-        # num_units = self.rng.randint(1, self.intermediate_size)
 
         config = {
             k: v.sample() if isinstance(v, Domain) else v
@@ -102,19 +99,11 @@ class MediumSearchSpace(SearchSpace):
     def _define_config_space(self, **kwargs):
         config_space = {}
         for i in range(self.num_layers):
-            # values = [
-            #     int(self.num_heads / 2**i)
-            #     for i in range(int(np.log2(self.num_heads)) + 1)
-            # ]
-            # values.reverse()
-            # config_space[f"num_heads_{i}"] = ordinal(values, kind="nn-log")
             config_space[f"num_heads_{i}"] = randint(0, self.num_heads)
             config_space[f"num_units_{i}"] = randint(0, self.intermediate_size)
         return config_space
 
     def __call__(self, *args, **kwargs):
-        # num_heads = self.rng.randint(0, self.num_heads, self.num_layers)
-        # num_units = self.rng.randint(0, self.intermediate_size, self.num_layers)
         config = {
             k: v.sample() if isinstance(v, Domain) else v
             for k, v in self.config_space.items()
