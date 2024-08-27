@@ -2,8 +2,6 @@ import json
 import logging
 import os
 
-logging.basicConfig(level=logging.INFO)
-
 from argparse import ArgumentParser
 from pathlib import Path
 from transformers import AutoModelForSequenceClassification
@@ -14,6 +12,8 @@ from syne_tune.config_space import randint
 from syne_tune.experiments import load_experiment
 
 from baselines import MethodArguments, methods
+
+logging.basicConfig(level=logging.INFO)
 
 
 if __name__ == "__main__":
@@ -66,14 +66,8 @@ if __name__ == "__main__":
             entry_point=str(Path(__file__).parent / "run_from_scratch_nas.py")
         ),
         scheduler=base_scheduler,
-        # scheduler=LS(
-        #     config_space,
-        #     metric=["valid", "params"],
-        #     mode=["min", "min"],
-        #     search_options={"debug_log": False},
-        # ),
         stop_criterion=stop_criterion,
-        n_workers=1,  # how many trials are evaluated in parallel
+        n_workers=1,
     )
     tuner.run()
 

@@ -72,7 +72,7 @@ class SearchArguments:
 
 
 def main():
-    start_time = time.time()
+
     parser = HfArgumentParser(
         (ModelArguments, DataTrainingArguments, TrainingArguments, SearchArguments)
     )
@@ -201,11 +201,6 @@ def main():
     kwargs = {"rng": np.random.RandomState(seed=training_args.seed)}
     search_space = SEARCHSPACES[search_args.search_space](model.config, **kwargs)
 
-    if search_args.optimize_memory_footprint:
-        metrics = ["error", "memory"]
-    else:
-        metrics = ["error", "params"]
-
     search_results = multi_objective_search(
         objective=evaluate_masks,
         search_space=search_space.config_space,
@@ -238,7 +233,6 @@ def main():
     results["data_loading_time"] = data_loading_time
     results["runtime"] = list(search_results["runtime"])
     results["indices"] = list(idx)
-    print(results)
 
     fname = os.path.join(
         training_args.output_dir, f"results_{data_args.task_name}.json"

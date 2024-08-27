@@ -159,7 +159,7 @@ def main():
     # Set seed before initializing model.
     if int(training_args.seed) == -1:
         training_args.seed = np.random.randint(2 ** 32 - 1)
-    print(training_args.seed)
+
     set_seed(training_args.seed)
     torch.manual_seed(training_args.seed)
     torch.cuda.manual_seed(training_args.seed)
