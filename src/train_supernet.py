@@ -200,18 +200,22 @@ def main():
     )
 
     if model_type.startswith("bert"):
-        model_family = 'bert'
+        model_family = "bert"
     elif model_type.startswith("roberta"):
-        model_family = 'roberta'
+        model_family = "roberta"
     else:
-        logging.error(f'Model type {model_type} are not supported. '
-                      f'We only support models of the BERT or RoBERTa family.')
+        logging.error(
+            f"Model type {model_type} are not supported. "
+            f"We only support models of the BERT or RoBERTa family."
+        )
         raise NotImplementedError
 
     if data_args.task_name in ["swag"]:
         model_cls = model_types[model_family]["multiple_choice"][nas_args.search_space]
     else:
-        model_cls = model_types[model_family]["seq_classification"][nas_args.search_space]
+        model_cls = model_types[model_family]["seq_classification"][
+            nas_args.search_space
+        ]
 
     search_space = search_spaces[nas_args.search_space](config, seed=training_args.seed)
 

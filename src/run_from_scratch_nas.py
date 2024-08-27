@@ -117,12 +117,14 @@ def main():
     )
 
     if model_type.startswith("bert"):
-        model_family = 'bert'
+        model_family = "bert"
     elif model_type.startswith("roberta"):
-        model_family = 'roberta'
+        model_family = "roberta"
     else:
-        logging.error(f'Model type {model_type} are not supported. '
-                      f'We only support models of the BERT or RoBERTa family.')
+        logging.error(
+            f"Model type {model_type} are not supported. "
+            f"We only support models of the BERT or RoBERTa family."
+        )
         raise NotImplementedError
 
     if data_args.task_name in ["swag"]:
