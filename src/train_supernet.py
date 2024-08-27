@@ -94,13 +94,13 @@ model_types["bert"] = {
         "small": SuperNetBertForSequenceClassificationSMALL,
         "medium": SuperNetBertForSequenceClassificationMEDIUM,
         "layer": SuperNetBertForSequenceClassificationLAYER,
-        "uniform": SuperNetBertForSequenceClassificationLARGE,
+        "large": SuperNetBertForSequenceClassificationLARGE,
     },
     "multiple_choice": {
         "small": SuperNetBertForMultipleChoiceSMALL,
         "medium": SuperNetBertForMultipleChoiceMEDIUM,
         "layer": SuperNetBertForMultipleChoiceLAYER,
-        "uniform": SuperNetBertForMultipleChoiceLARGE,
+        "large": SuperNetBertForMultipleChoiceLARGE,
     },
 }
 model_types["roberta"] = {
@@ -108,13 +108,13 @@ model_types["roberta"] = {
         "small": SuperNetRobertaForSequenceClassificationSMALL,
         "medium": SuperNetRobertaForSequenceClassificationMEDIUM,
         "layer": SuperNetRobertaForSequenceClassificationLAYER,
-        "uniform": SuperNetRobertaForSequenceClassificationLARGE,
+        "large": SuperNetRobertaForSequenceClassificationLARGE,
     },
     "multiple_choice": {
         "small": SuperNetRobertaForMultipleChoiceSMALL,
         "medium": SuperNetRobertaForMultipleChoiceMEDIUM,
         "layer": SuperNetRobertaForMultipleChoiceLAYER,
-        "uniform": SuperNetRobertaForMultipleChoiceLARGE,
+        "large": SuperNetRobertaForMultipleChoiceLARGE,
     },
 }
 
