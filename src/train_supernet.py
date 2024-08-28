@@ -118,7 +118,7 @@ model_types["roberta"] = {
     },
 }
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 
 @dataclass
@@ -142,19 +142,6 @@ def main():
         training_args,
         nas_args,
     ) = parser.parse_args_into_dataclasses()
-
-    # Setup logging
-    logging.basicConfig(
-        format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
-        datefmt="%m/%d/%Y %H:%M:%S",
-        handlers=[logging.StreamHandler(sys.stdout)],
-    )
-
-    log_level = training_args.get_process_log_level()
-    datasets.utils.logging.set_verbosity(log_level)
-    transformers.utils.logging.set_verbosity(log_level)
-    transformers.utils.logging.enable_default_handler()
-    transformers.utils.logging.enable_explicit_format()
 
     # Set seed before initializing model.
     if int(training_args.seed) == -1:
