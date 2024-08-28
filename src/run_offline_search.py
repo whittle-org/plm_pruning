@@ -41,7 +41,7 @@ SEARCHSPACES = {
     "small": SmallSearchSpace,
     "medium": MediumSearchSpace,
     "layer": LayerSearchSpace,
-    "uniform": FullSearchSpace,
+    "large": FullSearchSpace,
     "smallpower2": partial(SmallSearchSpace, power_of_2_encoding=True),
 }
 
