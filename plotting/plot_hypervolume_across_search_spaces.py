@@ -7,27 +7,21 @@ from matplotlib import rcParams
 rcParams["text.usetex"] = True
 rcParams["font.family"] = "sans"
 
-experiment = "weight_sharing_v9"
 
 method = "random_search"
-# model = 'roberta-base'
 model = "bert-base-cased"
-# model = 'gpt2'
-checkpoint = "one_shot"
+checkpoint = "full"
 epochs = 5
-random_sub_net = 2
-df = pd.read_csv(f"{experiment}.csv")
+df = pd.read_csv(f"all_results.csv")
 df = df.query(
     f"model == '{model}' & checkpoint == '{checkpoint}' & method == '{method}' "
-    f"& epoch == {epochs} & random_sub_net == {random_sub_net}"
+    f"& epoch == {epochs} "
 )
 labels = {
     "small": "Small",
-    # "medium": "Medium",
-    # "layer": "Layer",
-    # "uniform": "Large",
-    "meta_small_kde_1_tasks": "meta-1",
-    "meta_small_kde_5_tasks": "meta-5",
+    "medium": "Medium",
+    "layer": "Layer",
+    "large": "Large",
 }
 
 marker = ["o", "x", "s", "d", "p", "P", "^", "v", "<", ">"]

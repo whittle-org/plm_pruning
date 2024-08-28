@@ -2,8 +2,6 @@ import pandas
 import numpy as np
 import matplotlib.pyplot as plt
 
-from parse_data.load_distillation import load_distillation
-
 
 data = pandas.read_csv("./parse_data/data_relative_to_model_size.csv")
 suffix = ""

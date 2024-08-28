@@ -7,7 +7,6 @@ from pathlib import Path
 from collections import defaultdict
 from itertools import product
 
-from tqdm import tqdm
 from sklearn.preprocessing import QuantileTransformer
 from pygmo import hypervolume
 
@@ -20,21 +19,16 @@ class HyperVolume:
         return hypervolume(points).compute(self.ref_point)
 
 
-experiment = "weight_sharing_v9"
-base_path = Path(f"/Users/kleiaaro/experiments/nas_search_result/{experiment}")
-# methods = [
-#     "morea",
-#     "random_search",
-#     "local_search",
-#     "nsga2",
-#     "lsbo",
-#     "rsbo",
-#     "ehvi",
-# ]
-methods = ["random_search", "morea", "ehvi", "local_search", "nsga2"]
+base_path = Path.home() / Path(f"experiments/plm_pruning/results")
+methods = [
+    "random_search",
+    "local_search",
+    "ehvi",
+    "morea"
+]
 
-checkpoints = ["linear_random", "sandwich", "one_shot", "standard", "random", "kd"]
-epochs = [5, 10, 20, 40][:1]
+checkpoints = ["linear_random", "sandwich", "full", "standard", "random", "kd"]
+epochs = [5]
 models = ["bert-base-cased", "roberta-base"]
 labels = checkpoints
 
@@ -42,20 +36,15 @@ ref_point = [2, 2]
 seeds = np.arange(10)
 random_sub_nets = [1, 2]
 runs = np.arange(1)
-# datasets = ["rte", "mrpc", "cola", "stsb", "sst2", "qnli", 'imdb', 'swag', "mnli", "qqp"][:6]
-datasets = ["sst2", "qnli", "swag", "stsb", "cola", "mrpc", "imdb", "rte"]
+datasets = ["rte", "mrpc", "cola", "stsb", "sst2", "qnli", 'imdb', 'swag']
 search_spaces = [
     "layer",
     "small",
     "medium",
-    "uniform",
-    "meta_small_kde_1_tasks",
-    "meta_small_kde_5_tasks",
-][:-2]
-# search_spaces = ["small"]
+    "large",
+]
 
 runtimes = {
-    # "rte": np.linspace(110, 400, 100),
     "rte": np.linspace(150, 400, 100),
     "mrpc": np.linspace(150, 500, 100),
     "cola": np.linspace(205, 1000, 100),
@@ -64,9 +53,6 @@ runtimes = {
     "imdb": np.linspace(500, 10000, 100),
     "swag": np.linspace(500, 5000, 100),
     "qnli": np.linspace(200, 2000, 100),
-    # "qnli": [50 * i for i in range(4, 61)],
-    # "mnli": [50 * i for i in range(4, 61)],
-    # "qqp": [50 * i for i in range(4, 61)],
 }
 data = defaultdict(list)
 hv = HyperVolume(ref_point=ref_point)
@@ -97,29 +83,23 @@ for (
 ):
     path = (
         base_path
-        / search_space
-        / model
-        / f"epochs_{epoch}"
         / dataset
+        / model
+        / search_space
         / checkpoint
-        / f"random_sub_nets_{random_sub_net}"
-        / f"seed_{seed}"
         / method
-        / f"run_{run}"
+        / f"seed_{seed}"
     )
 
     if not os.path.exists(path):
-        print(f"{path} is missing")
+        # print(f"{path} is missing")
         continue
     d = json.load(open(path / f"results_{dataset}.json"))
     N = len(d["params"])
     print(
-        f"Results {dataset} {method} {checkpoint} {seed} {run}: N={N}, T-min={np.min(d['runtime'])} T-Max={np.max(d['runtime'])}"
+        f"Results {dataset} {method} {checkpoint} {seed}: N={N}, T-min={np.min(d['runtime'])} T-Max={np.max(d['runtime'])}"
     )
     for row in range(N):
-        # data["runtime"].append(row)
-        # if row == 0:
-        #     print(dataset, d['runtime'][row])
         data["runtime"].append(d["runtime"][row])
         data["dataset"].append(dataset)
         data["method"].append(method)
@@ -128,8 +108,6 @@ for (
         data["model"].append(model)
         data["epoch"].append(epoch)
         data["search_space"].append(search_space)
-        data["run_id"].append(run)
-        data["random_sub_net"].append(random_sub_net)
         data[f"objective_0"].append(d["error"][row])
         data[f"objective_1"].append(d["params"][row])
 
@@ -160,9 +138,7 @@ for dataset, df in data.groupby("dataset"):
             "method",
             "epoch",
             "checkpoint",
-            "random_sub_net",
             "seed",
-            "run_id",
         ]
     ):
         model = keys[0]
@@ -170,9 +146,7 @@ for dataset, df in data.groupby("dataset"):
         method = keys[2]
         epoch = keys[3]
         checkpoint = keys[4]
-        random_sub_net = keys[5]
-        seed = keys[6]
-        run_id = keys[7]
+        seed = keys[5]
 
         for runtime in runtimes[dataset]:
             split = sub_df[sub_df["runtime"] <= runtime]
@@ -191,8 +165,6 @@ for dataset, df in data.groupby("dataset"):
             final_results["runtime"].append(runtime)
             final_results["hv"].append(y)
             final_results["search_space"].append(search_space)
-            final_results["random_sub_net"].append(random_sub_net)
-            final_results["run_id"].append(run_id)
 
 final_results = pd.DataFrame(final_results)
-final_results.to_csv(f"{experiment}.csv")
+final_results.to_csv(f"all_results.csv")

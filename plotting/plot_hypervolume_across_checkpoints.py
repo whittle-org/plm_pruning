@@ -7,14 +7,12 @@ from matplotlib import rcParams
 # rcParams["text.usetex"] = True
 rcParams["font.family"] = "sans"
 
-experiment = "weight_sharing_v9"
-
 method = "random_search"
 search_space = "small"
 model = "bert-base-cased"
 # model = 'roberta-base'
 epochs = 5
-df = pd.read_csv(f"{experiment}.csv")
+df = pd.read_csv(f"all_results.csv")
 df = df.query(
     f"search_space == '{search_space}' & epoch == {epochs} "
     f"& method == '{method}' & model == '{model}'"
@@ -25,8 +23,7 @@ config = {
     "linear_random": {"label": "linear", "random_sub_nets": 1},
     "sandwich": {"label": "sandwich", "random_sub_nets": 2},
     "kd": {"label": "inplace-kd", "random_sub_nets": 2},
-    "one_shot": {"label": "full", "random_sub_nets": 2},
-    "ats": {"label": "ats", "random_sub_nets": 2},
+    "full": {"label": "full", "random_sub_nets": 2},
 }
 marker = ["o", "x", "s", "d", "p", "P", "^", "v", "<", ">"]
 checkpoint_names = [
@@ -34,21 +31,15 @@ checkpoint_names = [
     "random",
     "linear_random",
     "sandwich",
-    "one_shot",
+    "full",
     "kd",
-    "ats",
 ]
 for dataset, df_benchmark in df.groupby("dataset"):
     plt.figure(dpi=200)
-    # checkpoint_names, vals, xs = [], [], []
     vals, xs = [], []
-    # for mi, (checkpoint, df_checkpoint) in enumerate(df_benchmark.groupby("checkpoint")):
     for mi, checkpoint in enumerate(checkpoint_names):
-        print(mi, checkpoint)
-        random_sub_net = config[checkpoint]["random_sub_nets"]
-
         df_checkpoint = df_benchmark.query(
-            f"checkpoint == '{checkpoint}' & random_sub_net == {random_sub_net}"
+            f"checkpoint == '{checkpoint}'"
         )
         max_runtime = df_checkpoint.runtime.max()
         y = df_checkpoint[df_checkpoint["runtime"] == max_runtime]["hv"]

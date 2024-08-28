@@ -9,22 +9,18 @@ from compute_ranks import compute_ranks
 rcParams["text.usetex"] = False
 rcParams["font.family"] = "sans"
 
-experiment = "weight_sharing_v9"
-df = pd.read_csv(f"{experiment}.csv")
+df = pd.read_csv(f"all_results.csv")
 
-checkpoint = "one_shot"
+checkpoint = "sandwich"
 search_space = "small"
 epochs = 5
-random_sub_net = 2
 df = df.query(
-    f"search_space == '{search_space}' & checkpoint == '{checkpoint}' & epoch == {epochs} & random_sub_net == {random_sub_net}"
+    f"search_space == '{search_space}' & checkpoint == '{checkpoint}' & epoch == {epochs} "
 )
 method_info = {
     "morea": {"label": "MO-REA", "color": "C6"},
     "random_search": {"label": "RS", "color": "C0"},
-    # 'local_search_random': {'label': 'LS-R', 'color': 'C4'},
     "local_search": {"label": "LS", "color": "C1"},
-    # 'local_search_lower_bound': {'label': 'LS-L', 'color': 'C5'},
     "nsga2": {"label": "NSGA-2", "color": "C3"},
     "moasha": {"label": "MO-ASHA", "color": "C6"},
     "lsbo": {"label": "LS-BO", "color": "C2"},
@@ -60,10 +56,7 @@ marker = ["o", "x", "s", "d", "p", "P", "^", "v", "<", ">"]
 methods = []
 
 for model, df_model in df.groupby("model"):
-    if model == "bert-base-cased":
-        continue
-
-    n_runs = 9
+    n_runs = 1
     n_iters = 100
     n_methods = len(df["method"].unique())
     n_tasks = len(df["dataset"].unique())
@@ -80,8 +73,7 @@ for model, df_model in df.groupby("model"):
             traj = []
 
             for checkpoint_seed, df_seeds in df_method.groupby("seed"):
-                for checkpoint_run, df_run in df_seeds.groupby("run_id"):
-                    traj.append(list(df_run.sort_values(by="runtime")["hv"]))
+                traj.append(list(df_seeds.sort_values(by="runtime")["hv"]))
 
             runtimes = df_method.runtime.unique()
 
@@ -105,24 +97,12 @@ for model, df_model in df.groupby("model"):
                 markeredgewidth=1.5,
             )
 
-        # for runtime, l in list(df_method.groupby(['runtime'])['hv']):
-        #     plt.scatter([runtime] * len(l), l, color='C%i' % mi, alpha=0.4, s=20)
-
         plt.legend()
         plt.ylabel("regret hypervolume", fontsize=20)
         plt.xlabel("runtime (seconds)", fontsize=20)
-        # plt.ylim(3.8, 4)
         plt.title(f"{dataset.upper()}", fontsize=20)
-        # plt.xscale('log', base=2)
-        # plt.xticks(list(runtimes), list(runtimes))
-
-        # if 'ablation' in experiment:
-        #     plt.savefig(f"/Users/kleiaaro/git/SyneDocs/AaronK/auto_fine_tuning/figures/hypervolume_ablation_{benchmark}.pdf")
-        # else:
         plt.grid(linewidth="1", alpha=0.4)
-        print(dataset, model, checkpoint)
-        plt.ylim(ylims[model][dataset])
-        # plt.yscale('log')
+        # plt.ylim(ylims[model][dataset])
         plt.savefig(
             f"./figures/hypervolume_search_{dataset}_{model}_{checkpoint}.pdf",
             bbox_inches="tight",
@@ -147,6 +127,4 @@ for model, df_model in df.groupby("model"):
     plt.title(model.replace("_", "-").upper())
     plt.xlabel("time steps", fontsize=20)
     plt.ylabel("average rank", fontsize=15)
-    # plt.xticks(thresholds, [f"{int(xi * 100)}%" for xi in thresholds])
-    # plt.savefig(f"./figures/ranks_ws_nas_search_{model}.pdf", bbox_inches="tight")
     plt.show()
