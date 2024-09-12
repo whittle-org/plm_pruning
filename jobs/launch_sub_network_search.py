@@ -49,7 +49,7 @@ if __name__ == "__main__":
     keys = list(experiments.keys())
     for exp in product(*[value for value in experiments.values()]):
 
-        jobname = unify("search", method="coolname")
+        jobname = unify("plm_search", method="coolname")
         tag = "run"
         for ti in exp:
             tag += f"-{ti}"
