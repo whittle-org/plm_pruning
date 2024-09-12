@@ -1,20 +1,16 @@
 import os
 import time
 import json
-import logging
-import sys
 
 from dataclasses import dataclass, field
 
 import numpy as np
 import torch
 import torch.nn.functional as F
-import datasets
 import transformers
 import evaluate
 
 from tqdm.auto import tqdm
-from functools import partial
 
 from torch.optim import AdamW
 
@@ -85,7 +81,6 @@ search_spaces = {
     "medium": MediumSearchSpace,
     "layer": LayerSearchSpace,
     "large": FullSearchSpace,
-    "smallpower2": partial(SmallSearchSpace, power_of_2_encoding=True),
 }
 
 model_types = dict()
@@ -118,14 +113,11 @@ model_types["roberta"] = {
     },
 }
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-
 
 @dataclass
 class NASArguments:
     search_space: str = field(metadata={"help": ""}, default="small")
     sampling_strategy: str = field(metadata={"help": ""}, default=None)
-    log_dir: str = field(metadata={"help": ""}, default="./tensorboard_log_dir")
     num_random_sub_nets: int = field(metadata={"help": ""}, default=1)
     temperature: float = field(metadata={"help": ""}, default=1)
 
@@ -191,7 +183,7 @@ def main():
     elif model_type.startswith("roberta"):
         model_family = "roberta"
     else:
-        logging.error(
+        print(
             f"Model type {model_type} are not supported. "
             f"We only support models of the BERT or RoBERTa family."
         )
@@ -241,7 +233,7 @@ def main():
     model.to(device)
 
     step = 0
-    logging.info(f"Use {nas_args.sampling_strategy} to update super-network training")
+    print(f"Use {nas_args.sampling_strategy} to update super-network training")
 
     is_regression = True if data_args.task_name == "stsb" else False
 
@@ -309,19 +301,19 @@ def main():
         eval_metric = metric.compute()
 
         runtime = time.time() - start_time
-        logging.info(
+        print(
             f"epoch {epoch}: training loss = {train_loss / len(train_dataloader)}, "
             f"evaluation metrics = {eval_metric}, "
             f"runtime = {runtime}"
         )
-        logging.info(f"epoch={epoch};")
-        logging.info(f"training loss={train_loss / len(train_dataloader)};")
-        logging.info(f"evaluation metrics={eval_metric[metric_name]};")
-        logging.info(f"runtime={runtime};")
+        print(f"epoch={epoch};")
+        print(f"training loss={train_loss / len(train_dataloader)};")
+        print(f"evaluation metrics={eval_metric[metric_name]};")
+        print(f"runtime={runtime};")
 
         if training_args.save_strategy == "epoch":
             os.makedirs(training_args.output_dir, exist_ok=True)
-            logging.info(f"Store checkpoint in: {training_args.output_dir}")
+            print(f"Store checkpoint in: {training_args.output_dir}")
             model.save_pretrained(training_args.output_dir)
 
     model.eval()
