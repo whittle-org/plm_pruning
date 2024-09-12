@@ -195,7 +195,7 @@ def main():
             metric.add_batch(predictions=predictions, references=batch["labels"])
 
         eval_metric = metric.compute()
-
+        model.reset_super_network()
         return 1 - eval_metric[metric_name], n_params / n_params_super_net
 
     kwargs = {"rng": np.random.RandomState(seed=training_args.seed)}
