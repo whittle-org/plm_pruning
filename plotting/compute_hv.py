@@ -27,7 +27,7 @@ methods = [
     "morea"
 ]
 
-checkpoints = ["linear_random", "sandwich", "full", "standard", "random", "kd"]
+checkpoints = ["random_linear", "sandwich", "full", "standard", "random", "kd"]
 epochs = [5]
 models = ["bert-base-cased", "roberta-base"]
 labels = checkpoints

@@ -20,7 +20,7 @@ df = df.query(
 config = {
     "standard": {"label": "standard", "random_sub_nets": 1},
     "random": {"label": "random", "random_sub_nets": 1},
-    "linear_random": {"label": "linear", "random_sub_nets": 1},
+    "random_linear": {"label": "linear", "random_sub_nets": 1},
     "sandwich": {"label": "sandwich", "random_sub_nets": 2},
     "kd": {"label": "inplace-kd", "random_sub_nets": 2},
     "full": {"label": "full", "random_sub_nets": 2},
@@ -29,7 +29,7 @@ marker = ["o", "x", "s", "d", "p", "P", "^", "v", "<", ">"]
 checkpoint_names = [
     "standard",
     "random",
-    "linear_random",
+    "random_linear",
     "sandwich",
     "full",
     "kd",

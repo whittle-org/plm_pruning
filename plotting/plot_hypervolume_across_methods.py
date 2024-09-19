@@ -11,7 +11,7 @@ rcParams["font.family"] = "sans"
 
 df = pd.read_csv(f"all_results.csv")
 
-checkpoint = "sandwich"
+checkpoint = "full"
 search_space = "small"
 epochs = 5
 df = df.query(

@@ -259,6 +259,11 @@ def main():
             loss_function=loss_function,
             total_number_of_steps=num_training_steps,
         ),
+        "kd": RandomStrategy(
+            sampler=sampler,
+            kd_loss=kd_loss,
+            loss_function=loss_function,
+        ),
         "full": SandwichStrategy(
             sampler=sampler,
             kd_loss=kd_loss,
